@@ -1,65 +1,33 @@
-FROM python:3.7-alpine3.10
-LABEL maintainer="Adrien Ferrand <ferrand.ad@gmail.com>"
+ARG BUILDER_ARCH=amd64
+FROM docker.io/${BUILDER_ARCH}/python:3-slim AS constraints
 
-# Scripts in /scripts are required to be in the PATH to run properly as certbot's hooks
-ENV PATH /scripts:$PATH
+COPY src poetry.lock poetry.toml pyproject.toml README.rst /tmp/dnsrobocert/
 
-# Versioning
-ENV LEXICON_VERSION 3.3.1
-ENV CERTBOT_VERSION 0.36.0
+RUN python3 -m pip install --user poetry --no-warn-script-location \
+ && cd /tmp/dnsrobocert \
+ && python3 -m poetry export --format requirements.txt --without-hashes > /tmp/dnsrobocert/constraints.txt \
+ && python3 -m poetry build -f wheel
 
-# Install dependencies, certbot, lexicon, prepare for first start and clean
-RUN apk --no-cache --update add rsyslog git libffi libxml2 libxslt libstdc++ openssl docker ethtool tzdata bash \
- && apk --no-cache --update --virtual build-dependencies add libffi-dev libxml2-dev libxslt-dev openssl-dev build-base linux-headers \
- && pip install --no-cache-dir "certbot==$CERTBOT_VERSION" \
- && pip install --no-cache-dir "dns-lexicon[full]==$LEXICON_VERSION" \
- && pip install --no-cache-dir circus \
- && mkdir -p /var/lib/letsencrypt/hooks \
- && mkdir -p /etc/circus.d \
- && apk del build-dependencies
+FROM docker.io/python:3.9.6-slim
 
-# Let's Encrypt configuration
-ENV LETSENCRYPT_STAGING=false \
-    LETSENCRYPT_USER_MAIL=noreply@example.com \
-    LETSENCRYPT_ACME_V1=false \
-    LETSENCRYPT_SKIP_REGISTER=false
+COPY --from=constraints /tmp/dnsrobocert/constraints.txt /tmp/dnsrobocert/dist/*.whl /tmp/dnsrobocert/
 
-# Lexicon configuration
-ENV LEXICON_OPTIONS="" \
-    LEXICON_PROVIDER=cloudflare \
-    LEXICON_PROVIDER_OPTIONS=""
+ENV CONFIG_PATH /etc/dnsrobocert/config.yml
+ENV CERTS_PATH /etc/letsencrypt
 
-# Container specific configuration
-ENV TZ=UTC \
-    CRON_TIME_STRING="12 01,13 * * *" \
-    PFX_EXPORT=false \
-    PFX_EXPORT_PASSPHRASE="" \
-    CERTS_DIRS_MODE=0750 \
-    CERTS_FILES_MODE=0640 \
-    CERTS_USER_OWNER=root \
-    CERTS_GROUP_OWNER=root \
-    DEPLOY_HOOK=""
+RUN apt-get update -y \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        curl \
+        bash \
+        libxslt1.1 \
+ && curl -fsSL get.docker.com | sh \
+ && python -m venv /opt/dnsrobocert \
+ && PIP_EXTRA_INDEX_URL=https://www.piwheels.org/simple /opt/dnsrobocert/bin/pip install -c /tmp/dnsrobocert/constraints.txt /tmp/dnsrobocert/*.whl \
+ && mkdir -p /etc/dnsrobocert /etc/letsencrypt \
+ && ln -s /opt/dnsrobocert/bin/dnsrobocert /usr/local/bin/dnsrobocert \
+ && rm -rf /tmp/dnsrobocert /var/lib/apt/lists/*
 
-# Container in cluster configuration (Swarm, Kubernetes ...)
-ENV DOCKER_CLUSTER_PROVIDER none
+COPY docker/run.sh /run.sh
+RUN chmod +x run.sh
 
-# Copy scripts
-COPY files/run.sh \
-     files/watch-domains.sh \
-     files/autorestart-containers.sh \
-     files/autocmd-containers.sh \
-     files/deploy-hook.sh \
-     files/renew.sh /scripts/
-
-COPY files/authenticator.sh \
-     files/cleanup.sh /var/lib/letsencrypt/hooks/
-
-# Copy configuration files
-COPY files/circus.ini /etc/circus.ini
-COPY files/letsencrypt-dns.ini /etc/circus.d/letsencrypt-dns.ini
-
-RUN chmod +x /scripts/*
-
-VOLUME ["/etc/letsencrypt"]
-
-CMD ["/scripts/run.sh"]
+CMD ["/run.sh"]
