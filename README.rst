@@ -2,7 +2,7 @@
 |logo|
 ======
 
-|version| |python_support| |docker| |ci| |coverage| |spectrum|
+|version| |python_support| |docker| |ci| |coverage|
 
 .. |logo| image:: https://adferrand.github.io/dnsrobocert/images/dnsrobocert.svg
     :alt: DNSroboCert
@@ -10,14 +10,12 @@
     :target: https://pypi.org/project/dnsrobocert/
 .. |python_support| image:: https://img.shields.io/pypi/pyversions/dnsrobocert
     :target: https://pypi.org/project/dnsrobocert/
-.. |docker| image:: https://img.shields.io/docker/image-size/adferrand/dnsrobocert
-    :target: https://microbadger.com/images/adferrand/dnsrobocert
-.. |ci| image:: https://img.shields.io/azure-devops/build/adferrand/338d4cba-ab35-4cf9-a9c6-1d2601554b32/21/master
-    :target: https://dev.azure.com/adferrand/dnsrobocert/_build/latest?definitionId=21&branchName=master
-.. |coverage| image:: https://img.shields.io/azure-devops/coverage/adferrand/338d4cba-ab35-4cf9-a9c6-1d2601554b32/21
-    :target: https://dev.azure.com/adferrand/dnsrobocert/_build?definitionId=21&view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics
-.. |spectrum| image:: https://withspectrum.github.io/badge/badge.svg
-    :target: https://spectrum.chat/dnsrobocert
+.. |docker| image:: https://img.shields.io/docker/pulls/adferrand/dnsrobocert
+    :target: https://hub.docker.com/r/adferrand/dnsrobocert
+.. |ci| image:: https://img.shields.io/github/workflow/status/adferrand/dnsrobocert/main/master
+    :target: https://github.com/adferrand/dnsrobocert/actions/workflows/main.yml
+.. |coverage| image:: https://img.shields.io/codecov/c/github/adferrand/dnsrobocert/master
+    :target: https://app.codecov.io/gh/adferrand/dnsrobocert/branch/master
 
 .. tag:intro-begin
 

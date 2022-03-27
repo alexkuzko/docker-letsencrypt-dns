@@ -224,6 +224,8 @@ be defined in each relevant certificate configuration.
         - container1
       - swarm_services:
         - service1
+      podman_containers:
+        - podman1
       autocmd:
       - cmd: /usr/bin/remote_deploy.sh
         containers:
@@ -235,6 +237,7 @@ be defined in each relevant certificate configuration.
       force_renew: false
       follow_cnames: false
       reuse_key: false
+      key_type: ecdsa
 
 ``certificate`` properties
 --------------------------
@@ -279,6 +282,15 @@ be defined in each relevant certificate configuration.
     * *type*: ``string``
     * *default*: ``null`` (no deploy hook is configured)
 
+  .. note::
+
+    Several additional environment variables are injected by DNSrobocCert in the command
+    runs by ``deploy_hook``:
+    
+    * ``DNSROBOCERT_CERTIFICATE_NAME``: name of the current certificate in the configuration file,
+    * ``DNSROBOCERT_CERTIFICATE_DOMAINS``: comma-separated list of the domains for the current certificate,
+    * ``DNSROBOCERT_CERTIFICATE_PROFILE``: DNSroboCert profile associated with the current certificate.
+
 ``force_renew``
     * If ``true``, the certificate will be force renewed when DNSroboCert configuration changes. Useful
       for debugging purposes.
@@ -299,13 +311,18 @@ be defined in each relevant certificate configuration.
     * *type*: ``boolean``
     * *default*: ``false`` (the private key is never reused for certificate renewal)
 
+``key_type``
+    * Type of key to use when the certificate is generated. Must be ``rsa`` or ``ecdsa``.
+    * *type*: ``string``
+    * *default*: ``rsa`` (a RSA-type key will be used)
+
 
 .. _link: https://letsencrypt.org/2019/10/09/onboarding-your-customers-with-lets-encrypt-and-acme.html#the-advantages-of-a-cname
 
 .. warning::
 
     The following paragraphs describe the ``autorestart`` and ``autocmd`` features. To allow them to work properly,
-    DNSroboCert must have access to the Docker client socket file (usually at path `/var/run/docker.sock`).
+    DNSroboCert must have access to the Docker client socket file or the Podman socket (usually at path `/var/run/docker.sock` for Docker or /run/podman/podman.sock for rootful podman or /run/user/$UID/podman/podman.sock where $UID is your user id for rootless podman).
 
     If DNSroboCert is run directly on the host, this usually requires to use a user with administrative privileges,
     or member of the `docker` group.
@@ -318,6 +335,25 @@ be defined in each relevant certificate configuration.
         $ docker run --rm --name dnsrobocert
             --mount /var/run/docker.sock:/var/run/docker.sock
             adferrand/dnsrobocert
+
+    If DNSroboCert is run as a Podman, you will need to mount the podman socket into the container.
+    As an example the following command does that:
+
+    For rootless Podman:
+
+    .. code-block:: console
+
+        $ podman run --rm --name dnsrobocert
+            --volume /run/user/$UID/podman/:/run/podman
+            docker.io/adferrand/dnsrobocert
+
+    For rootful Podman:
+
+    .. code-block:: console
+
+        $ sudo podman run --rm --name dnsrobocert
+            --volume /run/podman/:/run/podman
+            docker.io/adferrand/dnsrobocert
 
 ``autorestart``
     * Configure an automated restart of target containers when the certificate is created/renewed. This
@@ -336,12 +372,17 @@ be defined in each relevant certificate configuration.
         * *type*: ``list[string]``
         * *default*: ``null`` (no swarm services to restart)
 
+    ''podman_containers''
+        * A list of Podman containers to restart.
+        * *type*: ``list[string]``
+        * *default*: ``null`` (no containers to restart)
+
     **Property configuration example**
 
     .. code-block:: yaml
 
         autorestart:
-        - container:
+        - containers:
           - container1
           - container2
           swarm_services:

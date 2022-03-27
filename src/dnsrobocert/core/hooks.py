@@ -159,7 +159,8 @@ def _pfx_export(certificate: Dict[str, Any], lineage_path: str):
         p12.set_ca_certificates(ca_certs)
 
         with open(os.path.join(lineage_path, "cert.pfx"), "wb") as f:
-            f.write(p12.export(pfx.get("passphrase")))
+            passphrase: str = pfx.get("passphrase")
+            f.write(p12.export(passphrase.encode() if passphrase else None))
 
 
 def _fix_permissions(certificate_permissions: Dict[str, str], lineage_path: str):
@@ -171,26 +172,37 @@ def _fix_permissions(certificate_permissions: Dict[str, str], lineage_path: str)
 def _autorestart(certificate: Dict[str, Any]):
     autorestart = certificate.get("autorestart")
     if autorestart:
-        if not os.path.exists("/var/run/docker.sock"):
-            raise RuntimeError("Error, /var/run/docker.sock socket is missing.")
+        if not os.path.exists("/var/run/docker.sock") and not os.path.exists(
+            "/run/podman/podman.sock"
+        ):
+            raise RuntimeError(
+                "Error, /var/run/docker.sock and /run/podman/podman.sock sockets are missing."
+            )
 
-        for onerestart in autorestart:
-            containers = onerestart.get("containers", [])
-            for container in containers:
-                utils.execute(["docker", "restart", container])
+        if os.path.exists("/var/run/docker.sock"):
+            for onerestart in autorestart:
+                containers = onerestart.get("containers", [])
+                for container in containers:
+                    utils.execute(["docker", "restart", container])
 
-            swarm_services = onerestart.get("swarm_services", [])
-            for service in swarm_services:
-                utils.execute(
-                    [
-                        "docker",
-                        "service",
-                        "update",
-                        "--detach=false",
-                        "--force",
-                        service,
-                    ]
-                )
+                swarm_services = onerestart.get("swarm_services", [])
+                for service in swarm_services:
+                    utils.execute(
+                        [
+                            "docker",
+                            "service",
+                            "update",
+                            "--detach=false",
+                            "--force",
+                            service,
+                        ]
+                    )
+
+        if os.path.exists("/run/podman/podman.sock"):
+            for onerestart in autorestart:
+                containers = onerestart.get("podman_containers", [])
+                for container in containers:
+                    utils.execute(["podman", "--remote", "restart", container])
 
 
 def _autocmd(certificate: Dict[str, Any]):
@@ -212,11 +224,19 @@ def _autocmd(certificate: Dict[str, Any]):
 
 def _deploy_hook(certificate: Dict[str, Any]):
     deploy_hook = certificate.get("deploy_hook")
+    env = os.environ.copy()
+    env.update(
+        {
+            "DNSROBOCERT_CERTIFICATE_NAME": certificate.get("name", ""),
+            "DNSROBOCERT_CERTIFICATE_PROFILE": certificate.get("profile", ""),
+            "DNSROBOCERT_CERTIFICATE_DOMAINS": ",".join(certificate.get("domains", [])),
+        }
+    )
     if deploy_hook:
         if os.name == "nt":
-            subprocess.check_call(["powershell.exe", "-Command", deploy_hook])
+            subprocess.check_call(["powershell.exe", "-Command", deploy_hook], env=env)
         else:
-            subprocess.check_call(deploy_hook, shell=True)
+            subprocess.check_call(deploy_hook, shell=True, env=env)
 
 
 if __name__ == "__main__":

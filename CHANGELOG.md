@@ -2,6 +2,74 @@
 
 ## master - CURRENT
 
+## 3.18.0 - 20/02/2022
+### Added
+* Inject environment variables `DNSROBOCERT_CERTIFICATE_NAME`, `DNSROBOCERT_CERTIFICATE_PROFILE`
+  and `DNSROBOCERT_CERTIFICATE_DOMAINS` in hook scripts
+* Setup CI/CD with GitHub Actions
+
+### Modified
+* Upgrade to Lexicon 3.9.4
+* Upgrade to Certbot 1.23.0
+* Fix error in Docker entrypoint timezone setting when `TIMEZONE` is defined
+
+### Removed
+* Remove Azure Pipelines
+
+## 3.17.1 - 23/01/2022
+### Modified
+* Fix Docker builds by downgrading Python 3.10 to Python 3.9
+
+## 3.17.0 - 17/01/2022
+### Added
+* Add support for Python 3.10
+
+### Modified
+* Link dynamically to Lexicon documentation for providers options
+* Update Lexicon to 3.9.2 (fix `transip` provider)
+
+### Removed
+* Drop support for Python 3.6
+
+## 3.16.0 - 09/01/2022
+### Modified
+* Update Certbot to 1.22.0
+* Update Lexicon to 3.8.5 (add ValueDomain provider)
+* Fix some deprecated warnings and documentation
+
+## 3.15.0 - 18/11/2021
+## Added
+* Support ECDSA keys when creating new certificates with the `key_type` string parameter
+  in the certificate section: set to `rsa` to use RSA keys (default if not set) or `ecdsa`
+  to use ECDSA keys. Example:
+  ```yaml
+  profiles:
+  - name: dummy
+    ...
+  certificates:
+  - domains: [example.org]
+    profile: dummy
+    key_type: ecdsa
+  ```
+
+## 3.14.0 - 12/11/2021
+### Added
+* Makes DNSroboCert capable to restart Podman containers with the `autorestart` feature (#551)
+
+### Modified
+* Update Certbot to 1.21.0
+* Update Lexicon to 3.8.3
+
+## 3.13.0 - 09/10/2021
+### Added
+* Set the preferred chain to `ISRG Root X1` when issuing or renewing a certificate
+
+### Modified
+* Update Certbot to 1.20.0
+* Update Lexicon to 3.8.0
+* Fix docker build
+* Fix docker python environment
+
 ## 3.12.0 - 18/08/2021
 ### Removed
 * Drop Docker support on `armel` architecture

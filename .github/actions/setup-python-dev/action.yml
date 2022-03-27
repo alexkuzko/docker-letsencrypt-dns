@@ -1,0 +1,30 @@
+name: Setup Python dev
+description: Setup a Python development environment with Poetry and Tox
+inputs:
+  python-version:
+    description: Python version to use
+    required: false
+    default: "3.10"
+outputs:
+  project-version:
+    description: Version of the checked-out Poetry project
+    value: ${{ steps.project-version.outputs.version }}
+runs:
+  using: composite
+  steps:
+    - name: Install python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ inputs.python-version }}
+    - name: Install poetry & tox
+      run: |
+        python -m pip install -U pip
+        pip install poetry tox
+      shell: bash
+    - id: project-version
+      name: Extract Poetry project version
+      run: |
+        VERSION=$(poetry version | awk '{print $2}')
+        echo "Project version is: ${VERSION}"
+        echo "::set-output name=version::${VERSION}"
+      shell: bash
