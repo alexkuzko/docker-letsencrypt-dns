@@ -1014,7 +1014,7 @@ python-versions = "*"
 
 [[package]]
 name = "types-pyopenssl"
-version = "22.0.0"
+version = "22.0.3"
 description = "Typing stubs for pyOpenSSL"
 category = "dev"
 optional = false
@@ -1833,8 +1833,8 @@ types-ipaddress = [
     {file = "types_ipaddress-1.0.8-py3-none-any.whl", hash = "sha256:4933b74da157ba877b1a705d64f6fa7742745e9ffd65e51011f370c11ebedb55"},
 ]
 types-pyopenssl = [
-    {file = "types-pyOpenSSL-22.0.0.tar.gz", hash = "sha256:d86dde7f6fe2f1ac9fe0b6282e489f649f480364bdaa9d6a4696d52505f4477e"},
-    {file = "types_pyOpenSSL-22.0.0-py3-none-any.whl", hash = "sha256:da685f57b864979f36df0157895139c8244ad4aad19b551f1678206fbad0108a"},
+    {file = "types-pyOpenSSL-22.0.3.tar.gz", hash = "sha256:374e3d828017f31be1ce93e2e839208222f2f71447995a9e26979789b9aa2598"},
+    {file = "types_pyOpenSSL-22.0.3-py3-none-any.whl", hash = "sha256:cfa34b5cb57c2e4336a5f5b388cbab5abfe150bca66a6fa17104e4e3a252ddf8"},
 ]
 types-pyyaml = [
     {file = "types-PyYAML-6.0.4.tar.gz", hash = "sha256:6252f62d785e730e454dfa0c9f0fb99d8dae254c5c3c686903cf878ea27c04b7"},
