@@ -509,20 +509,22 @@ files = [
 
 [[package]]
 name = "dns-lexicon"
-version = "3.9.4"
+version = "3.11.7"
 description = "Manipulate DNS records on various DNS providers in a standardized/agnostic way"
 category = "main"
 optional = false
 python-versions = ">=3.7,<4.0"
 files = [
-    {file = "dns-lexicon-3.9.4.tar.gz", hash = "sha256:61c877693e8b7cdc97691d8689fd59cacd596da9d422b847315c484267a0b52f"},
-    {file = "dns_lexicon-3.9.4-py3-none-any.whl", hash = "sha256:beda186d98134c56af4640bcfd22d0f103c2b5891c457bd575f84594334ef30f"},
+    {file = "dns_lexicon-3.11.7-py3-none-any.whl", hash = "sha256:8d31e87176dd216e9ae6a58f13fb1566c4f11ee44b9ffb778b21f07180ee276b"},
+    {file = "dns_lexicon-3.11.7.tar.gz", hash = "sha256:fb3969e9a33c056e95dce7c43712665d8937e2a05112e2f4c098ef86a9cf07d8"},
 ]
 
 [package.dependencies]
 beautifulsoup4 = ">=4"
 boto3 = {version = ">=1", optional = true, markers = "extra == \"route53\" or extra == \"full\""}
 cryptography = ">=2"
+dnspython = {version = ">=2", optional = true, markers = "extra == \"ddns\" or extra == \"full\""}
+importlib-metadata = ">=4"
 localzone = {version = ">=0.9.8", optional = true, markers = "extra == \"localzone\" or extra == \"full\""}
 oci = {version = ">=2", optional = true, markers = "extra == \"oci\" or extra == \"full\""}
 pyyaml = ">=3"
@@ -533,7 +535,7 @@ zeep = {version = ">=3", optional = true, markers = "extra == \"gransy\" or extr
 
 [package.extras]
 ddns = ["dnspython (>=2)"]
-full = ["boto3 (>=1)", "localzone (>=0.9.8)", "oci (>=2)", "softlayer (>=5)", "zeep (>=3)"]
+full = ["boto3 (>=1)", "dnspython (>=2)", "localzone (>=0.9.8)", "oci (>=2)", "softlayer (>=5)", "zeep (>=3)"]
 gransy = ["zeep (>=3)"]
 localzone = ["localzone (>=0.9.8)"]
 oci = ["oci (>=2)"]
