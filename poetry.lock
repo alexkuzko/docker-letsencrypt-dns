@@ -2,14 +2,14 @@
 
 [[package]]
 name = "acme"
-version = "2.3.0"
+version = "2.4.0"
 description = "ACME protocol implementation in Python"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "acme-2.3.0-py3-none-any.whl", hash = "sha256:85633a3b0788f4bc3a3265045e3e320addf1003d1276470e77a9f9da96506c08"},
-    {file = "acme-2.3.0.tar.gz", hash = "sha256:eac6849d28132d8490a76f638775d627fbae2c47f2807d78e9bbfb4bde48c2fc"},
+    {file = "acme-2.4.0-py3-none-any.whl", hash = "sha256:658bc0a408ded9cb785088acbfd2f564bd7627e19251ec6e53a87a9f13ee19a4"},
+    {file = "acme-2.4.0.tar.gz", hash = "sha256:755efb9c8e97aa0a4ee6d739189546e5a01f3adb1292688db280a8161060acfe"},
 ]
 
 [package.dependencies]
