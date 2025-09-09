@@ -13,3 +13,8 @@ services:
     # doesn't work? Used /etc/letsencrypt/cli.ini with: preferred-chain = ISRG Root X1
     - ACME_PREFERRED_CHAIN="ISRG Root X1"
 
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1400
