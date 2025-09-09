@@ -2,20 +2,20 @@
 
 [[package]]
 name = "acme"
-version = "2.3.0"
+version = "2.6.0"
 description = "ACME protocol implementation in Python"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "acme-2.3.0-py3-none-any.whl", hash = "sha256:85633a3b0788f4bc3a3265045e3e320addf1003d1276470e77a9f9da96506c08"},
-    {file = "acme-2.3.0.tar.gz", hash = "sha256:eac6849d28132d8490a76f638775d627fbae2c47f2807d78e9bbfb4bde48c2fc"},
+    {file = "acme-2.6.0-py3-none-any.whl", hash = "sha256:261e8655034f3afe099e68a9c5061304f5ba0c1625ec1b8288fc228315bacbdf"},
+    {file = "acme-2.6.0.tar.gz", hash = "sha256:607360db73e458150ab63825a82b220bdf04badbd81c6d3218e5d993c6be491c"},
 ]
 
 [package.dependencies]
-cryptography = ">=2.5.0"
+cryptography = ">=3.2.1"
 josepy = ">=1.13.0"
-PyOpenSSL = ">=17.5.0"
+PyOpenSSL = ">=17.5.0,<23.1.0 || >23.1.0"
 pyrfc3339 = "*"
 pytz = ">=2019.3"
 requests = ">=2.20.0"
