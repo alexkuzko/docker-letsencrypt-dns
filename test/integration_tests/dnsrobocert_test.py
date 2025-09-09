@@ -1,11 +1,17 @@
+from __future__ import annotations
+
 import contextlib
 import json
 import os
 import platform
+import shutil
 import stat
 import subprocess
+import tarfile
+import tempfile
 import time
-from typing import Optional
+from collections.abc import Iterator
+from pathlib import Path
 from unittest import skipIf
 from unittest.mock import patch
 
@@ -14,42 +20,61 @@ import urllib3
 
 from dnsrobocert.core import main
 
-_PEBBLE_VERSION = "v2.3.0"
+_PEBBLE_VERSION = "v2.6.0"
 _ASSETS_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets")
 _CHALLTESTSRV_PORT = 8000
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def _fetch(workspace):
-    if platform.system() == "Windows":
-        suffix = "windows-amd64.exe"
-    elif platform.system() == "Linux":
-        suffix = "linux-amd64"
+def _fetch(workspace: str) -> tuple[str, str, str]:
+    arch = "amd64"
+    os_kind = platform.system().lower()
+    if os_kind == "windows":
+        suffix = ".exe"
+    elif os_kind == "linux":
+        suffix = ""
     else:
         raise RuntimeError("Unsupported platform: {0}".format(platform.system()))
 
-    pebble_path = _fetch_asset("pebble", suffix)
-    challtestsrv_path = _fetch_asset("pebble-challtestsrv", suffix)
+    pebble_path = _fetch_asset("pebble", os_kind, arch, suffix)
+    challtestsrv_path = _fetch_asset("pebble-challtestsrv", os_kind, arch, suffix)
     pebble_config_path = _build_pebble_config(workspace)
-
     return pebble_path, challtestsrv_path, pebble_config_path
 
 
-def _fetch_asset(asset, suffix):
-    asset_path = os.path.join(_ASSETS_PATH, f"{asset}_{_PEBBLE_VERSION}_{suffix}")
+def _fetch_asset(asset: str, os_kind: str, arch: str, suffix: str) -> str:
+    asset_path = os.path.join(
+        _ASSETS_PATH, f"{asset}-{_PEBBLE_VERSION}-{os_kind}-{arch}{suffix}"
+    )
     if not os.path.exists(asset_path):
-        asset_url = f"https://github.com/letsencrypt/pebble/releases/download/{_PEBBLE_VERSION}/{asset}_{suffix}"
-        response = requests.get(asset_url)
-        response.raise_for_status()
-        with open(asset_path, "wb") as file_h:
-            file_h.write(response.content)
+        with tempfile.TemporaryDirectory() as workdir:
+            archive_path = os.path.join(workdir, "archive.tar.gz")
+            asset_url = f"https://github.com/letsencrypt/pebble/releases/download/{_PEBBLE_VERSION}/{asset}-{os_kind}-{arch}.tar.gz"
+            response = requests.get(asset_url)
+            response.raise_for_status()
+            with open(archive_path, "wb") as file_h:
+                file_h.write(response.content)
+
+            with tarfile.open(archive_path) as archive:
+                archive.extractall(workdir)
+                shutil.copyfile(
+                    os.path.join(
+                        workdir,
+                        f"{asset}-{os_kind}-{arch}",
+                        os_kind,
+                        arch,
+                        f"{asset}{suffix}",
+                    ),
+                    asset_path,
+                )
+
     os.chmod(asset_path, os.stat(asset_path).st_mode | stat.S_IEXEC)
 
     return asset_path
 
 
-def _build_pebble_config(workspace):
+def _build_pebble_config(workspace: str) -> str:
     config_path = os.path.join(workspace, "pebble-config.json")
     with open(config_path, "w") as file_h:
         file_h.write(
@@ -70,7 +95,7 @@ def _build_pebble_config(workspace):
     return config_path
 
 
-def _check_until_timeout(url, attempts=30):
+def _check_until_timeout(url: str, attempts: int = 30) -> None:
     for _ in range(attempts):
         time.sleep(1)
         try:
@@ -83,7 +108,7 @@ def _check_until_timeout(url, attempts=30):
 
 
 @contextlib.contextmanager
-def _start_pebble(tmp_path):
+def _start_pebble(tmp_path: Path) -> Iterator[None]:
     workspace = tmp_path / "workspace"
     os.mkdir(str(workspace))
 
@@ -95,8 +120,8 @@ def _start_pebble(tmp_path):
     environ["PEBBLE_AUTHZREUSE"] = "100"
     environ["PEBBLE_VA_ALWAYS_VALID"] = "1"
 
-    pebble_process: Optional[subprocess.Popen] = None
-    challtestsrv_process: Optional[subprocess.Popen] = None
+    pebble_process: subprocess.Popen | None = None
+    challtestsrv_process: subprocess.Popen | None = None
 
     try:
         pebble_process = subprocess.Popen(
@@ -142,7 +167,7 @@ def _start_pebble(tmp_path):
     platform.system() == "Darwin",
     reason="Integration tests are not supported on Mac OS X.",
 )
-def test_it(tmp_path):
+def test_it(tmp_path: Path) -> None:
     with _start_pebble(tmp_path):
         directory_path = tmp_path / "letsencrypt"
         os.mkdir(directory_path)
@@ -168,6 +193,9 @@ certificates:
   follow_cnames: true
   reuse_key: true
   key_type: ecdsa
+  pfx:
+    export: true
+    passphrase: test
 """
             )
 
@@ -178,6 +206,11 @@ certificates:
             ):
                 main.main(["-c", str(config_path), "-d", str(directory_path)])
 
-        assert os.path.exists(
-            str(directory_path / "live" / "test1.example.net" / "cert.pem")
-        )
+        assert set(os.listdir(directory_path / "live" / "test1.example.net")) == {
+            "privkey.pem",
+            "cert.pfx",
+            "fullchain.pem",
+            "README",
+            "cert.pem",
+            "chain.pem",
+        }

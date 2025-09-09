@@ -1,10 +1,13 @@
 import os
+from pathlib import Path
 from unittest import mock
+
+from pytest import MonkeyPatch
 
 from dnsrobocert.core import config, legacy
 
 
-def test_legacy_migration(tmp_path, monkeypatch):
+def test_legacy_migration(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     config_path = tmp_path / "dnsrobocert" / "config.yml"
     legacy_config_domain_file = tmp_path / "old_config" / "domains.conf"
     generated_config_path = tmp_path / "dnsrobocert" / "config-generated.yml"
@@ -40,7 +43,6 @@ test1.sub.example.com test2.sub.example.com autorestart-containers=container1,co
 
     monkeypatch.setenv("LEXICON_PROVIDER", "ovh")
     monkeypatch.setenv("LEXICON_OVH_AUTH_APPLICATION_KEY", "KEY")
-    monkeypatch.setenv("LEXICON_OPTIONS", "--delegated=sub.example.com")
     monkeypatch.setenv(
         "LEXICON_PROVIDER_OPTIONS",
         "--auth-entrypoint ovh-eu --auth-application-secret=SECRET-OVERRIDE",
@@ -112,8 +114,7 @@ certificates:
     passphrase: PASSPHRASE
   profile: ovh
 profiles:
-- delegated_subdomain: sub.example.com
-  max_checks: 3
+- max_checks: 3
   name: ovh
   provider: ovh
   provider_options:

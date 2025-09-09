@@ -1,27 +1,21 @@
-ARG BUILDER_ARCH=amd64
-FROM docker.io/${BUILDER_ARCH}/python:3-slim AS constraints
+FROM docker.io/python:3.11.12-slim AS constraints
 
-COPY src poetry.lock poetry.toml pyproject.toml README.rst /tmp/dnsrobocert/
+COPY src uv.lock pyproject.toml README.rst /tmp/dnsrobocert/
 
-RUN apt-get update -y \
- && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-       curl \
-       gcc \
-       python3-dev \
-       libffi-dev \
- && curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python - \
- && rm -rf /var/lib/apt/lists/*
+RUN pip install uv \
+ && cd /tmp/dnsrobocert \
+ && uv export --no-emit-project --no-hashes > /tmp/dnsrobocert/constraints.txt \
+ # Pin some packages on armv7l arch to latest available and compatible versions from pipwheels.
+ && [ "$(uname -m)" != "armv7l" ] || sed -i 's/cryptography==.*/cryptography==44.0.2/' /tmp/dnsrobocert/constraints.txt \
+ && [ "$(uname -m)" != "armv7l" ] || sed -i 's/lxml==.*/lxml==5.3.1/' /tmp/dnsrobocert/constraints.txt \
+ && uv build
 
-RUN cd /tmp/dnsrobocert \
- && /root/.local/bin/poetry export --format requirements.txt --without-hashes > /tmp/dnsrobocert/constraints.txt \
- && /root/.local/bin/poetry build -f wheel
-
-FROM docker.io/python:3.9.10-slim
+FROM docker.io/python:3.11.12-slim
 
 COPY --from=constraints /tmp/dnsrobocert/constraints.txt /tmp/dnsrobocert/dist/*.whl /tmp/dnsrobocert/
 
-ENV CONFIG_PATH /etc/dnsrobocert/config.yml
-ENV CERTS_PATH /etc/letsencrypt
+ENV CONFIG_PATH=/etc/dnsrobocert/config.yml
+ENV CERTS_PATH=/etc/letsencrypt
 
 RUN apt-get update -y \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \

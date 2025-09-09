@@ -1,20 +1,22 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
+from __future__ import annotations
+
 import argparse
 import logging
 import os
-import re
 import signal
 import sys
 import tempfile
 import threading
 import time
 import traceback
-from typing import List, Optional
+from typing import Any
 
 import coloredlogs
 import yaml
 
+from dnsrobocert import get_version
 from dnsrobocert.core import background, certbot, config, legacy, utils
 
 LOGGER = logging.getLogger(__name__)
@@ -26,7 +28,7 @@ def _process_config(
     directory_path: str,
     runtime_config_path: str,
     lock: threading.Lock,
-):
+) -> None:
     dnsrobocert_config = config.load(config_path)
 
     if not dnsrobocert_config:
@@ -45,56 +47,25 @@ def _process_config(
     certbot.account(runtime_config_path, directory_path, lock)
 
     LOGGER.info("Creating missing certificates if needed (~1min for each)")
-    certificates = dnsrobocert_config.get("certificates", {})
-    for certificate in certificates:
-        try:
-            lineage = config.get_lineage(certificate)
-            domains = certificate["domains"]
-            force_renew = certificate.get("force_renew", False)
-            reuse_key = certificate.get("reuse_key", False)
-            key_type = certificate.get("key_type", "rsa")
-            LOGGER.info(f"Handling the certificate for domain(s): {', '.join(domains)}")
-            certbot.certonly(
-                runtime_config_path,
-                directory_path,
-                lineage,
-                lock,
-                domains,
-                force_renew=force_renew,
-                reuse_key=reuse_key,
-                key_type=key_type,
-            )
-        except BaseException as error:
-            LOGGER.error(
-                f"An error occurred while processing certificate config `{certificate}`:\n{error}"
-            )
-
-    LOGGER.info("Revoke and delete certificates if needed")
-    lineages = {config.get_lineage(certificate) for certificate in certificates}
-    for domain in os.listdir(os.path.join(directory_path, "live")):
-        if domain != "README":
-            domain = re.sub(r"^\*\.", "", domain)
-            if domain not in lineages:
-                LOGGER.info(f"Removing the certificate {domain}")
-                certbot.revoke(runtime_config_path, directory_path, domain, lock)
+    certbot._issue(runtime_config_path, directory_path, lock)
 
 
 class _Daemon:
     _do_shutdown = False
 
-    def __init__(self):
+    def __init__(self) -> None:
         signal.signal(signal.SIGINT, self.shutdown)
         signal.signal(signal.SIGTERM, self.shutdown)
 
-    def shutdown(self, _signum, _frame):
+    def shutdown(self, _signum: Any, _frame: Any) -> None:
         self._do_shutdown = True
 
-    def do_shutdown(self):
+    def do_shutdown(self) -> bool:
         return self._do_shutdown
 
 
-def _watch_config(config_path: str, directory_path: str):
-    LOGGER.info("Starting DNSroboCert.")
+def _watch_config(config_path: str, directory_path: str) -> None:
+    LOGGER.info(f"Starting DNSroboCert {get_version()}.")
 
     with tempfile.TemporaryDirectory() as workspace:
         runtime_config_path = os.path.join(workspace, "dnsrobocert-runtime.yml")
@@ -129,7 +100,7 @@ def _watch_config(config_path: str, directory_path: str):
     LOGGER.info("Exiting DNSroboCert.")
 
 
-def _run_config(config_path: str, directory_path: str):
+def _run_config(config_path: str, directory_path: str) -> None:
     LOGGER.info("Running DNSroboCert...")
 
     with tempfile.TemporaryDirectory() as workspace:
@@ -149,7 +120,7 @@ def _run_config(config_path: str, directory_path: str):
         )
 
 
-def main(args: Optional[List[str]] = None):
+def main(args: list[str] | None = None) -> None:
     if not args:
         args = sys.argv[1:]
 

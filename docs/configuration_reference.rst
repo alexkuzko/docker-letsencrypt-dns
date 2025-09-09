@@ -30,8 +30,6 @@ reconfigure itself with it and will not proceed to any further action. This is u
 in the file without DNSroboCert taking them into account immediately, then apply all modifications altogether
 by disabling the draft mode.
 
-**Section reference:**
-
 .. code-block:: yaml
 
     draft: true
@@ -41,8 +39,6 @@ by disabling the draft mode.
 
 This section contains all general configuration parameters for Certbot (the underlying ACME client that
 generates the certificates) and how these certificates are stored locally.
-
-**Section reference:**
 
 .. code-block:: yaml
 
@@ -60,26 +56,31 @@ generates the certificates) and how these certificates are stored locally.
       crontab_renew: 12 01,13 * * *
 
 ``email_account``
+~~~~~~~~~~~~~~~~~
     * The email account used to create an account against Let's Encrypt
     * *type*: ``string``
     * *default*: ``null`` (no registration is done, and so no certificate is issued if an account does not exist yet)
 
 ``staging``
+~~~~~~~~~~~
     * If ``true``, Let's Encrypt staging servers will be used (useful for testing purpose)
     * *type*: ``boolean``
     * *default*: ``false``
 
 ``api_version``
+~~~~~~~~~~~~~~~
     * The ACME protocol version to use (deprecated ``1`` or current ``2``)
     * *type*: ``integer``
     * *default*: ``2``
 
 ``directory_url``
+~~~~~~~~~~~~~~~~~
     * The ACME CA server to use
     * *type*: ``string`` representing a valid URL
     * *default*: ``null`` (ACME CA server URL is determined using ``staging`` and ``api_version`` values)
 
 ``certs_permissions``
+~~~~~~~~~~~~~~~~~~~~~
     * An object describing the files and directories permissions to apply on generated certificates
     * *type*: ``object``
     * *default*: ``null`` (default permissions are applied: certificates are owned by the user/group running DNSroboCert,
@@ -106,6 +107,7 @@ generates the certificates) and how these certificates are stored locally.
         * *default*: ``null`` (group running DNSroboCert will group owner of the certificates)
 
 ``crontab_renew``
+~~~~~~~~~~~~~~~~~
     * A cron pattern defining the frequency for certificates renewal check
     * *type*: ``string`` representing a valid cron pattern
     * *default*: ``12 01,13 * * *`` (twice a day)
@@ -121,8 +123,6 @@ Each profile is referenced by its ``name``, which can be used in one or more cer
 ``certificates`` section. Multiple profiles can be defined for the same DNS provider. However, each profile
 ``name`` must be unique.
 
-**Section reference**
-
 .. code-block:: yaml
 
     profiles:
@@ -132,27 +132,29 @@ Each profile is referenced by its ``name``, which can be used in one or more cer
           auth_token: TOKEN
         sleep_time: 45
         max_checks: 5
-      - name: my_profile2_delegated
+      - name: my_profile2
         provider: henet
         provider_options:
           auth_username: USER
           auth_password: PASSWORD
-        delegated_subdomain: sub.example.net
 
 ``profile`` properties
 ----------------------
 
 ``name``
+~~~~~~~~
     * The name of the profile, used to reference this profile in the ``certificates`` section.
     * *type*: ``string``
     * **mandatory property**
 
 ``provider``
+~~~~~~~~~~~~
     * Name of the DNS provider supported by Lexicon
     * *type*: ``string``
     * **mandatory property**
 
 ``provider_options``
+~~~~~~~~~~~~~~~~~~~~
     * An `object` defining all properties to use for the DNS provider defined for this profile
     * *type*: ``object``
     * *default*: ``null``
@@ -169,31 +171,45 @@ Each profile is referenced by its ``name``, which can be used in one or more cer
           auth_secret: MY_SECRET
 
 ``sleep_time``
+~~~~~~~~~~~~~~
     * Time in seconds to wait after the TXT entries are inserted into the DNS zone to perform the DNS-01 challenge
       of a certificate
     * *type*: ``integer``
     * *default*: ``30``
 
 ``max_checks``
+~~~~~~~~~~~~~~
     * Maximum number of checks to verify that the TXT entries have been properly inserted into the DNS zone before
       performing the DNS-01 challenge of a certificate. DNSroboCert will wait for the amount of time defined in
       ``sleep_time`` between each check. Set to ``0`` to disable these checks.
     * *type*: integer
     * *default*: ``0`` (no check is done)
 
-``delegated_subdomain``
-    * If the zone that should contain the TXT entries for the DNS-01 challenges is not a SLD (Second-Level Domain), for
-      instance because a SLD delegated your subdomain to a specific zone, this options tells to DNSroboCert that your
-      subdomain is actually the zone to modify, and not the SLD.
-    * For instance: the zone is ``sub.example.net``, certificate is for ``www.sub.example.net``, then
-      ``delegated_subdomain`` should be equal to ``sub.example.net``.
-    * *type*: ``string``
-    * *default*: ``null`` (there is no subdomain delegation)
-
 ``ttl``
+~~~~~~~
     * Time to live in seconds for the TXT entries inserted in the DNS zone during a DNS-01 challenge.
     * *type*: ``integer``
     * *default*: ``null`` (use any default TTL value specific to the DNS provider associated to this profile)
+
+``dynamic_zone_resolution``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    * Switch on/off the dynamic resolution of the actual zone for a given domain using live DNS requests. This is
+      particularly useful for zones that concerns non second-level domains (eg. ``sub.domain.net``).
+      If set to ``False``, DNSRoboCert will rely on a static list of top level domains to guess second level domains:
+      you would need the option ``delegated_subdomain`` to work with a third (or more) level domain. Disabling the
+      dynamic zone resolution can be useful on environments where DNS responses are unreliable (eg. slow requests
+      or timeouts).
+    * *type*: ``boolean``
+    * *default*: ``True`` (dynamic zone resolution is enabled by default)
+
+``delegated_subdomain``
+~~~~~~~~~~~~~~~~~~~~~~~
+    * If ``dynamic_zone_resolution`` is set to ``False`` and you are working on a subdomain which has been
+      delegated to a specific zone (eg. ``sub.domain.net`` delegated from ``domain.net``), this option allows
+      to explicitly set the actual domain of that zone (otherwise DNSRoboCert may assume the zone is ``domain.net``
+      instead of ``sub.domain.net`` when dynamic zone resolution is not set).
+    * *type*: ``boolean``
+    * *default*: ``null``
 
 ``certificates`` Section
 ========================
@@ -205,8 +221,6 @@ profile is referred by its name, and **must** exist in the ``profiles`` Section.
 
 In parallel several actions can be defined when a certificate is created or renewed. These actions have to
 be defined in each relevant certificate configuration.
-
-**Section reference**
 
 .. code-block:: yaml
 
@@ -232,7 +246,7 @@ be defined in each relevant certificate configuration.
         - container2
     - domains:
       - www.sub.example.net
-      profile: my_profile2_delegated
+      profile: my_profile2
       deploy_hook: python /home/user/local_deploy.py
       force_renew: false
       follow_cnames: false
@@ -243,17 +257,20 @@ be defined in each relevant certificate configuration.
 --------------------------
 
 ``profile``
+~~~~~~~~~~~
     * The profile name to use to validated DNS-01 challenges. This profile must exist in the ``profiles``
       section.
     * *type*: ``string``
     * **mandatory property**
 
 ``domains``
+~~~~~~~~~~~
     * List of the domains to include in the certificate.
     * *type*: ``list[string]``
     * **mandatory property**
 
 ``name``
+~~~~~~~~
     * Name of the certificate, used in particular to define where the certificate assets (key, cert, chain...)
       will be stored on the filesystem. For a certificate named ``my-cert``, files will be available in the
       directory whose path is ``[CERTS_PATH]/live/my-cert``. If the name is not specified, the effective
@@ -263,6 +280,7 @@ be defined in each relevant certificate configuration.
       instance ``example.net`` for ``example.net`` or ``*.example.net``)
 
 ``pfx``
+~~~~~~~
     * Configure an export of the certificate into the PFX (also known as PKCS#12) format upon creation/renewal.
     * *type*: ``object``
     * *default*: ``null`` (certificate is not exported in PFX format)
@@ -278,6 +296,7 @@ be defined in each relevant certificate configuration.
         * *default*: ``null`` (the PFX file is not protected by a passphrase)
 
 ``deploy_hook``
+~~~~~~~~~~~~~~~
     * A command hook to execute locally when the certificate is created/renewed.
     * *type*: ``string``
     * *default*: ``null`` (no deploy hook is configured)
@@ -292,12 +311,14 @@ be defined in each relevant certificate configuration.
     * ``DNSROBOCERT_CERTIFICATE_PROFILE``: DNSroboCert profile associated with the current certificate.
 
 ``force_renew``
+~~~~~~~~~~~~~~~
     * If ``true``, the certificate will be force renewed when DNSroboCert configuration changes. Useful
       for debugging purposes.
     * *type*: ``boolean``
     * *default*: ``false`` (the certificate is not force renewed)
 
 ``follow_cnames``
+~~~~~~~~~~~~~~~~~
     * If ``true``, DNSroboCert will follow the chain of CNAME that may be defined for the challenge
       DNS names ``_acme-challenge.DOMAIN`` (where ``DOMAIN`` is the domain to validate and integrate
       in the certificate). This allows to delegate the validation to another DNS zone for security
@@ -306,12 +327,14 @@ be defined in each relevant certificate configuration.
     * *default*: ``false`` (CNAME chain is not followed)
 
 ``reuse_key``
+~~~~~~~~~~~~~
     * If ``true``, the existing private key will be reused during certificate renewal instead of
       creating a new one each time the certificate is renewed.
     * *type*: ``boolean``
     * *default*: ``false`` (the private key is never reused for certificate renewal)
 
 ``key_type``
+~~~~~~~~~~~~
     * Type of key to use when the certificate is generated. Must be ``rsa`` or ``ecdsa``.
     * *type*: ``string``
     * *default*: ``rsa`` (a RSA-type key will be used)
@@ -319,10 +342,16 @@ be defined in each relevant certificate configuration.
 
 .. _link: https://letsencrypt.org/2019/10/09/onboarding-your-customers-with-lets-encrypt-and-acme.html#the-advantages-of-a-cname
 
+.. _warning-container-config:
+
 .. warning::
 
     The following paragraphs describe the ``autorestart`` and ``autocmd`` features. To allow them to work properly,
-    DNSroboCert must have access to the Docker client socket file or the Podman socket (usually at path `/var/run/docker.sock` for Docker or /run/podman/podman.sock for rootful podman or /run/user/$UID/podman/podman.sock where $UID is your user id for rootless podman).
+    DNSroboCert must have access to the Docker client socket file or the Podman socket. Usually at path:
+    
+    * `/var/run/docker.sock` for Docker,
+    * `/run/podman/podman.sock` for rootful Podman,
+    * `/run/user/$UID/podman/podman.sock` where $UID is your user id for rootless podman.
 
     If DNSroboCert is run directly on the host, this usually requires to use a user with administrative privileges,
     or member of the `docker` group.
@@ -356,6 +385,7 @@ be defined in each relevant certificate configuration.
             docker.io/adferrand/dnsrobocert
 
 ``autorestart``
+~~~~~~~~~~~~~~~
     * Configure an automated restart of target containers when the certificate is created/renewed. This
       property takes a list of autorestart configurations. Each autorestart is triggered in the order
       they have been inserted here.
@@ -367,12 +397,12 @@ be defined in each relevant certificate configuration.
         * *type*: ``list[string]``
         * *default*: ``null`` (no containers to restart)
 
-    ``swarm_services``:
+    ``swarm_services``
         * A list of swarm services to force restart
         * *type*: ``list[string]``
         * *default*: ``null`` (no swarm services to restart)
 
-    ''podman_containers''
+    ``podman_containers``
         * A list of Podman containers to restart.
         * *type*: ``list[string]``
         * *default*: ``null`` (no containers to restart)
@@ -389,6 +419,7 @@ be defined in each relevant certificate configuration.
           - service1
 
 ``autocmd``
+~~~~~~~~~~~
     * Configure an automated execution of an arbitrary command on target containers when the certificate is
       is created/renewed. This property takes a list of autocmd configurations. Each autocmd is triggered
       in the order they have been inserted here.
@@ -461,5 +492,5 @@ Non-existent variables declared in the configuration file will raise an error.
     If you want to write a literal ``${NOT_A_VARIABLE}`` that should not be resolved, you can escape the ``${}``
     syntax by prepending a second dollar sign like so: ``$${NOT_A_VARIABLE}``.
 
-.. _GitHub: https://raw.githubusercontent.com/adferrand/docker-letsencrypt-dns/master/src/dnsrobocert/schema.yml
-.. _Lexicon Providers configuration reference: https://dnsrobocert.readthedocs.io/en/latest/providers_options.html
+.. _GitHub: https://raw.githubusercontent.com/adferrand/dnsrobocert/main/src/dnsrobocert/schema.yml
+.. _Lexicon Providers configuration reference: https://dns-lexicon.github.io/dns-lexicon/providers_options.html

@@ -2,6 +2,87 @@
 
 ## master - CURRENT
 
+## 3.26.1 - 13/04/2025
+### Added
+* New parameter named `dynamic_zone_resolution` in the `profile` section: this boolean flag can disable
+  the dynamic zone resolution introduced by DNSRoboCert 3.25.0 for certificates that use that profile
+  if issues are encountered.
+
+## 3.26.0 - 13/04/2025
+### Modified
+* Upgrade to Lexicon 3.21.0 (new providers: `devnomads`, `ionos`, `qcloud`, `regfish`, `scaleway`, `timeweb`)
+* Upgrade to Certbot 3.1.0
+* Official support for Python 3.13
+* Migrate from Poetry to UV to manage the project
+
+## 3.25.0 - 16/11/2023
+### Added
+* DNSroboCert now leverages the new DNS zone name resolution introduced by Lexicon 3.17.0.
+  As a consequence, the `delegated_subdomain` field of the `profile` section is not used
+  anymore, and will be removed in a future version.
+
+### Modified
+* Upgrade to Lexicon 3.17.0
+* Upgrade to Certbot 2.7.4
+* Official support for Python 3.12
+* Resolve CNAMEs using dedicated method provided by `dnspython`
+
+## 3.24.2 - 18/09/2023
+### Modified
+* Fix TXT record cleanup actions
+
+## 3.24.1 - 13/08/2023
+### Modified
+* Fix compatibility issue with Python 3.8
+
+## 3.24.0 - 13/08/2023
+### Modified
+* Upgrade to Lexicon 3.14.0 (new provider: `wedos`, new functions to call Lexicon client)
+
+### Removed
+* Drop Python 3.7 support
+
+## 3.23.1 - 19/06/2023
+### Modified
+* Fix docker armv7l build
+
+## 3.23.0 - 19/06/2023
+### Modified
+* Upgrade to Certbot 2.6.0
+* Upgrade to Lexicon 3.12.0 (new providers: `duckdns`, `dnsservices`, `flexibleengine`)
+* Official support for Python 3.11
+* Fix community URL (#871)
+* Fix various issues regarding dynamic configuration by calling `certbot certonly` for all certbot actions (#970)
+
+## 3.22.1 - 12/10/2022
+### Modified
+* Upgrade to Lexicon 3.11.6 (fix `hetzner` provider)
+
+## 3.22.0 - 10/10/2022
+### Modified
+* Fix docker build
+* Upgrade to Certbot 1.31.0
+* Upgrade to Lexicon 3.11.5 (fix `yandex` provider)
+
+## 3.21.0 - 13/08/2022
+### Modified
+* Upgrade to Lexicon 3.11.4 (new provider: `porkbun` + various fixes)
+* Upgrade to Certbot 1.29.0
+
+## 3.20.1 - 24/05/2022
+### Modified
+* Upgrade to Lexicon 3.11.2 (various fixes)
+
+## 3.20.0 - 07/05/2022
+### Modified
+* Upgrade to Certbot 1.27.0
+* Upgrade to Lexicon 3.11.0 (new providers: `namecom` + various fixes)
+
+## 3.19.0 - 01/05/2022
+### Modified
+* Upgrade to Certbot 1.26.0
+* Upgrade to Lexicon 3.10.0 (new providers: `misaka`, `yandexcloud` + various fixes)
+
 ## 3.18.0 - 20/02/2022
 ### Added
 * Inject environment variables `DNSROBOCERT_CERTIFICATE_NAME`, `DNSROBOCERT_CERTIFICATE_PROFILE`

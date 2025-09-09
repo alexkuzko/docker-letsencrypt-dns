@@ -4,7 +4,7 @@
 
 |version| |python_support| |docker| |ci| |coverage|
 
-.. |logo| image:: https://adferrand.github.io/dnsrobocert/images/dnsrobocert.svg
+.. |logo| image:: https://adferrand.github.io/dnsrobocert/_images/dnsrobocert.svg
     :alt: DNSroboCert
 .. |version| image:: https://img.shields.io/pypi/v/dnsrobocert
     :target: https://pypi.org/project/dnsrobocert/
@@ -12,15 +12,15 @@
     :target: https://pypi.org/project/dnsrobocert/
 .. |docker| image:: https://img.shields.io/docker/pulls/adferrand/dnsrobocert
     :target: https://hub.docker.com/r/adferrand/dnsrobocert
-.. |ci| image:: https://img.shields.io/github/workflow/status/adferrand/dnsrobocert/main/master
+.. |ci| image:: https://img.shields.io/github/actions/workflow/status/adferrand/dnsrobocert/main.yml?branch=master
     :target: https://github.com/adferrand/dnsrobocert/actions/workflows/main.yml
 .. |coverage| image:: https://img.shields.io/codecov/c/github/adferrand/dnsrobocert/master
     :target: https://app.codecov.io/gh/adferrand/dnsrobocert/branch/master
 
-.. tag:intro-begin
-
 .. contents:: Table of Contents
    :local:
+
+.. tag:intro-begin
 
 Features
 ========
@@ -40,7 +40,7 @@ DNSroboCert is designed to manage `Let's Encrypt`_ SSL certificates based on `DN
 * Delivered as a standalone application and a Docker image.
 
 .. _DNS alias mode: https://github.com/acmesh-official/acme.sh/wiki/DNS-alias-mode
-.. _certificate section: https://dnsrobocert.readthedocs.io/en/latest/configuration_reference.html#certificate-properties
+.. _certificate section: https://adferrand.github.io/dnsrobocert/configuration_reference.html#certificates-section
 
 Why use DNSroboCert
 ===================
@@ -97,7 +97,7 @@ For a quick start, please have a look in particular at the `User guide`_ and the
 Support
 =======
 
-Do not hesitate to join the `DNSroboCert community on Spectrum`_ if you need help to use or develop DNSroboCert!
+Do not hesitate to join the `DNSroboCert community on Github Discussions`_ if you need help to use or develop DNSroboCert!
 
 Contributing
 ============
@@ -105,8 +105,8 @@ Contributing
 If you want to help in the DNSroboCert development, you are welcome!
 Please have a look at the `Developer guide`_ page to know how to start.
 
-.. _DNSroboCert documentation: https://dnsrobocert.readthedocs.io
-.. _User guide: https://dnsrobocert.readthedocs.io/en/latest/user_guide.html
-.. _Lexicon provider configuration: https://dnsrobocert.readthedocs.io/en/latest/providers_options.html
-.. _Developer guide: https://dnsrobocert.readthedocs.io/en/latest/developer_guide.html
-.. _DNSroboCert community on Spectrum: https://spectrum.chat/dnsrobocert
+.. _DNSroboCert documentation: https://adferrand.github.io/dnsrobocert/
+.. _User guide: https://adferrand.github.io/dnsrobocert/user_guide.html
+.. _Lexicon provider configuration: https://dns-lexicon.github.io/dns-lexicon/providers_options.html
+.. _Developer guide: https://adferrand.github.io/dnsrobocert/developer_guide.html
+.. _DNSroboCert community on Github Discussions: https://github.com/adferrand/dnsrobocert/discussions

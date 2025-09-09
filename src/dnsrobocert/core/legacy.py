@@ -1,14 +1,22 @@
+from __future__ import annotations
+
 import logging
 import os
 import re
 import shlex
 from copy import deepcopy
 from functools import reduce
-from typing import Any, Dict, List
+from typing import Any
 
 import coloredlogs
 import yaml
-from lexicon import config, parser
+from lexicon._private.parser import generate_cli_main_parser
+from lexicon.config import (
+    ArgsConfigSource,
+    ConfigResolver,
+    EnvironmentConfigSource,
+    FileConfigSource,
+)
 
 from dnsrobocert.core import utils
 
@@ -16,20 +24,20 @@ LEGACY_CONFIGURATION_PATH = "/etc/letsencrypt/domains.conf"
 LOGGER = logging.getLogger(__name__)
 coloredlogs.install(logger=LOGGER)
 
-LEXICON_ARGPARSER = parser.generate_cli_main_parser()
+LEXICON_ARGPARSER = generate_cli_main_parser()
 
 
-def migrate(config_path):
+def migrate(config_path: str) -> str | None:
     if os.path.exists(config_path):  # pragma: nocover
-        return
+        return None
 
     if not os.path.exists(LEGACY_CONFIGURATION_PATH):  # pragma: nocover
-        return
+        return None
 
     provider = os.environ.get("LEXICON_PROVIDER")
     if not provider:  # pragma: nocover
         LOGGER.error("Error, LEXICON_PROVIDER environment variable is not set!")
-        return
+        return None
 
     envs, configs, args = _gather_parameters(provider)
 
@@ -53,8 +61,6 @@ def migrate(config_path):
 
     for key, value in args.get(provider, {}).items():
         provider_config.setdefault("provider_options", {})[key] = value  # type: ignore
-    if args.get("delegated"):
-        provider_config["delegated_subdomain"] = args.get("delegated")
 
     example_config_path = os.path.join(
         os.path.dirname(config_path), "config-generated.yml"
@@ -71,15 +77,13 @@ def migrate(config_path):
             "Legacy configuration detected. Support for legacy configurations will be dropped soon."
         )
         LOGGER.warning(
-            "Please visit https://dnsrobocert.readthedocs.io/en/latest/miscellaneous.html#migration-from-docker-letsencrypt-dns "
+            "Please visit https://adferrand.github.io/dnsrobocert/miscellaneous.html#migration-from-docker-letsencrypt-dns "
             "for more details. "
         )
+        LOGGER.warning(f"New configuration file is available at {example_config_path}")
         LOGGER.warning(
-            f"New configuration file is available at `{example_config_path}`"
-        )
-        LOGGER.warning(
-            f"Quick fix (if directory `{os.path.dirname(config_path)}` is persisted): "
-            f"rename this file to `{os.path.basename(config_path)}`"
+            f"Quick fix (if directory {os.path.dirname(config_path)} is persisted): "
+            f"rename this file to {os.path.basename(config_path)}"
         )
 
         os.makedirs(os.path.dirname(example_config_path), exist_ok=True)
@@ -90,8 +94,8 @@ def migrate(config_path):
 
 
 def _handle_specific_envs_variables(
-    envs: Dict[str, str], migrated_config: Dict[str, Any]
-):
+    envs: dict[str, str], migrated_config: dict[str, Any]
+) -> None:
     if envs.get("LETSENCRYPT_USER_MAIL"):
         migrated_config.setdefault("acme", {})["email_account"] = envs.get(
             "LETSENCRYPT_USER_MAIL"
@@ -148,7 +152,9 @@ def _handle_specific_envs_variables(
                 value["pfx"]["passphrase"] = envs["PFX_EXPORT_PASSPHRASE"]
 
 
-def _gather_parameters(provider):
+def _gather_parameters(
+    provider: str,
+) -> tuple[dict[str, str], dict[str, Any], dict[str, dict[str, Any]]]:
     env_variables_of_interest = {
         name: value
         for name, value in os.environ.items()
@@ -172,19 +178,19 @@ def _gather_parameters(provider):
     except SystemExit:  # pragma: nocover
         args = None
 
-    resolver = config.ConfigResolver()
+    resolver = ConfigResolver()
     if args:
         resolver.with_args(args)
     resolver.with_env()
     resolver.with_config_dir(os.path.dirname(LEGACY_CONFIGURATION_PATH))
 
-    lexicon_files_config: Dict[str, Any] = {}
+    lexicon_files_config: dict[str, Any] = {}
     for source in resolver._config_sources:
-        if isinstance(source, config.FileConfigSource):
+        if isinstance(source, FileConfigSource):
             _deep_merge(lexicon_files_config, source._parameters)
-        elif isinstance(source, config.EnvironmentConfigSource):
+        elif isinstance(source, EnvironmentConfigSource):
             env_variables_of_interest.update(source._parameters)
-        elif isinstance(source, config.ArgsConfigSource):
+        elif isinstance(source, ArgsConfigSource):
             command_line_params = {
                 provider: {
                     key: value
@@ -192,6 +198,7 @@ def _gather_parameters(provider):
                     if key
                     not in (
                         "delegated",
+                        "resolve_zone_name",
                         "config_dir",
                         "provider_name",
                         "action",
@@ -214,8 +221,8 @@ def _gather_parameters(provider):
     return env_variables_of_interest, lexicon_files_config, command_line_params
 
 
-def _extract_certificates(envs: Dict[str, str], profile: str) -> List[Dict[str, Any]]:
-    certificates: List[Dict[str, Any]] = []
+def _extract_certificates(envs: dict[str, str], profile: str) -> list[dict[str, Any]]:
+    certificates: list[dict[str, Any]] = []
 
     with open(os.path.join(LEGACY_CONFIGURATION_PATH)) as f:
         lines = f.read().splitlines()
@@ -233,9 +240,11 @@ def _extract_certificates(envs: Dict[str, str], profile: str) -> List[Dict[str, 
                     containers = [container.strip() for container in containers]
                     autorestart.append(
                         {
-                            "swarm_services"
-                            if envs.get("DOCKER_CLUSTER_PROVIDER") == "swarm"
-                            else "containers": containers,
+                            (
+                                "swarm_services"
+                                if envs.get("DOCKER_CLUSTER_PROVIDER") == "swarm"
+                                else "containers"
+                            ): containers,
                         }
                     )
                     continue
@@ -251,7 +260,7 @@ def _extract_certificates(envs: Dict[str, str], profile: str) -> List[Dict[str, 
                 domains.append(item)
 
             if domains:
-                certificate: Dict[str, Any] = {
+                certificate: dict[str, Any] = {
                     "name": utils.normalize_lineage(domains[0]),
                     "domains": domains,
                     "profile": profile,
@@ -266,8 +275,8 @@ def _extract_certificates(envs: Dict[str, str], profile: str) -> List[Dict[str, 
     return certificates
 
 
-def _deep_merge(*dicts):
-    def merge_into(d1, d2):
+def _deep_merge(*dicts: dict[str, Any]) -> dict[str, Any]:
+    def merge_into(d1: dict[str, Any], d2: dict[str, Any]) -> dict[str, Any]:
         for key in d2:
             if key not in d1 or not isinstance(d1[key], dict):
                 d1[key] = deepcopy(d2[key])
