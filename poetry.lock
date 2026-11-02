@@ -509,20 +509,22 @@ files = [
 
 [[package]]
 name = "dns-lexicon"
-version = "3.9.4"
+version = "3.13.0"
 description = "Manipulate DNS records on various DNS providers in a standardized/agnostic way"
 optional = false
 python-versions = ">=3.7,<4.0"
 groups = ["main"]
 files = [
-    {file = "dns-lexicon-3.9.4.tar.gz", hash = "sha256:61c877693e8b7cdc97691d8689fd59cacd596da9d422b847315c484267a0b52f"},
-    {file = "dns_lexicon-3.9.4-py3-none-any.whl", hash = "sha256:beda186d98134c56af4640bcfd22d0f103c2b5891c457bd575f84594334ef30f"},
+    {file = "dns_lexicon-3.13.0-py3-none-any.whl", hash = "sha256:34687a093b1d1a4a32ab1669bbf2d45ba3d312c0930dfcdd3d198849deb222be"},
+    {file = "dns_lexicon-3.13.0.tar.gz", hash = "sha256:38e1db9f325e6dc92e8e5c80da24f1e15ab59598a67911e7aad987c2ff3456f6"},
 ]
 
 [package.dependencies]
 beautifulsoup4 = ">=4"
-boto3 = {version = ">=1", optional = true, markers = "extra == \"route53\" or extra == \"full\""}
+boto3 = {version = ">=1.25", optional = true, markers = "extra == \"route53\" or extra == \"full\""}
 cryptography = ">=2"
+dnspython = {version = ">=2", optional = true, markers = "extra == \"ddns\" or extra == \"duckdns\" or extra == \"full\""}
+importlib-metadata = ">=4"
 localzone = {version = ">=0.9.8", optional = true, markers = "extra == \"localzone\" or extra == \"full\""}
 oci = {version = ">=2", optional = true, markers = "extra == \"oci\" or extra == \"full\""}
 pyyaml = ">=3"
@@ -533,11 +535,12 @@ zeep = {version = ">=3", optional = true, markers = "extra == \"gransy\" or extr
 
 [package.extras]
 ddns = ["dnspython (>=2)"]
-full = ["boto3 (>=1)", "localzone (>=0.9.8)", "oci (>=2)", "softlayer (>=5)", "zeep (>=3)"]
+duckdns = ["dnspython (>=2)"]
+full = ["boto3 (>=1.25)", "dnspython (>=2)", "localzone (>=0.9.8)", "oci (>=2)", "softlayer (>=5)", "zeep (>=3)"]
 gransy = ["zeep (>=3)"]
 localzone = ["localzone (>=0.9.8)"]
 oci = ["oci (>=2)"]
-route53 = ["boto3 (>=1)"]
+route53 = ["boto3 (>=1.25)"]
 softlayer = ["softlayer (>=5)"]
 
 [[package]]
@@ -646,11 +649,11 @@ description = "Read metadata from Python packages"
 optional = false
 python-versions = ">=3.6"
 groups = ["main", "dev"]
-markers = "python_version < \"3.8\""
 files = [
     {file = "importlib_metadata-4.2.0-py3-none-any.whl", hash = "sha256:057e92c15bc8d9e8109738a48db0ccb31b4d9d5cfbee5a8670879a30be66304b"},
     {file = "importlib_metadata-4.2.0.tar.gz", hash = "sha256:b7e52a1f8dec14a75ea73e0891f3060099ca1d8e6a462a4dff11c3e119ea1b31"},
 ]
+markers = {dev = "python_version < \"3.8\""}
 
 [package.dependencies]
 typing-extensions = {version = ">=3.6.4", markers = "python_version < \"3.8\""}
@@ -1875,7 +1878,7 @@ files = [
     {file = "zipp-3.7.0-py3-none-any.whl", hash = "sha256:b47250dd24f92b7dd6a0a8fc5244da14608f3ca90a5efcd37a3b1642fac9a375"},
     {file = "zipp-3.7.0.tar.gz", hash = "sha256:9f50f446828eb9d45b267433fd3e9da8d801f614129124863f9c51ebceafb87d"},
 ]
-markers = {main = "python_version < \"3.9\"", dev = "python_version < \"3.8\""}
+markers = {dev = "python_version < \"3.8\""}
 
 [package.extras]
 docs = ["jaraco.packaging (>=8.2)", "rst.linker (>=1.9)", "sphinx"]
